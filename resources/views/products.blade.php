@@ -49,7 +49,7 @@
                                 <td>₦ {{$product->unit_price}}</td>
                                 <td>{{$product->product_size}}</td>
                                 <td style="text-align: center;" onclick="showProductOrders('{{$product->product_id}}');"><i class="fa fa-eye fa-2x" aria-hidden="true"></i></td>
-                                <td style="text-align: center;" onclick="showStockIn('{{$product->product_id}}');"><i class="fa fa-pencil-square-o fa-2x" aria-hidden="true"></i></td>
+                                <td style="text-align: center;" onclick="showStockIn('{{$product->product_id}}');"><i class="fa fa-list fa-2x" aria-hidden="true"></i></td>
                                 @if(Session::get('role_id')==1)
                                     <td style="text-align: center;" onclick="editProduct('{{$product->product_id}}');"><i class="fa fa-pencil-square-o fa-2x" aria-hidden="true"></i></td>
                                     <td style="text-align: center;" onclick="deleteProduct('{{$product->product_id}}');"><i class="fa fa-trash-o fa-2x" aria-hidden="true"></i></td>
@@ -125,7 +125,7 @@
                                     <select class="form-control select2" name="product_id" id="product_id" style="width: 100%;">
                                         <option>Select Product</option>
                                         @foreach ($allProducts as $product)
-                                            <option value="{{$product->product_id}}">{{$product->product_code}} : {{$product->product_name}}</option>
+                                            <option value="{{$product->product_id}}">{{$product->product_code}} : {{$product->product_name}} ({{$product->product_size}})</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -214,7 +214,7 @@
                                     <button class="btn btn-success" style="margin-top: 22px;" onclick="filterProductStockIn();">Apply</button>
                                     <button class="btn btn-danger" style="margin-top: 22px;" onclick="function clickedReset() {
                                             document.getElementById('stockInFilter').innerHTML='';
-                                            showStockIn(document.getElementById('product_id_div').innerHTML);
+                                            showStockIn(document.getElementById('product_id_div_stock').innerHTML);
                                         }
                                         clickedReset();">Reset</button>
                                 </div>
@@ -330,7 +330,6 @@
                 dataType: 'json',
                 async:true,
                 success: function(data){
-                    console.log(data[0]);
                     document.getElementById("product_id_div").innerHTML=product_id;
                     var table_content = '<table id="payments_table"  class="table table-bordered table-hover allTables">'+
                                         '<thead>'+
@@ -428,6 +427,7 @@
         }
 
         function showStockIn(product_id){
+            console.log(product_id);
             $.ajax({
                 url: "{{ url('/getStockInReports') }}"+"/"+product_id,
                 type: "get",
@@ -484,32 +484,28 @@
                 dataType: 'json',
                 async:true,
                 success: function(data){
-                    console.log(data[0]);
+                    console.log(data);
                     /*document.getElementById("table_body").innerHTML*/
-                    var table_content = '<table id="payments_table"  class="table table-bordered table-hover allTables">'+
+                    var table_content = '<table id="stock_in_table"  class="table table-bordered table-hover allTables">'+
                             '<thead>'+
                             '<tr>'+
                             '<th>Date</th>'+
-                            '<th>Ordered By</th>'+
                             '<th>Opening Stock</th>'+
-                            '<th>Closing Amount</th>'+
-                            '<th>Ordered Amount</th>'+
+                            '<th>Stock In Qty</th>'+
+                            '<th>Closing Stock</th>'+
                             '</tr>'+
                             '</thead>'+
                             '<tbody id="table_body">';
-                    var product_name='';
-                    for(order of data){
-                        //console.log(order);
-                        var opening_stock = Number(order.available_amount)+Number(order.qty);
-                        table_content+='<tr><td>'+order.order_date+'</td><td>'+order.customer_name+'</td><td>'+opening_stock+'</td><td>'+order.available_amount+'</td><td>'+order.qty+'</tr>';
-                        product_name = order.product_name;
+                    for(stock_in of data){
+                        var closing_stock = Number(stock_in.opening_stock)+Number(stock_in.qty);
+                        table_content+='<tr><td>'+stock_in.created_at+'</td><td>'+stock_in.opening_stock+'</td><td>'+stock_in.qty+'</td><td>'+closing_stock+'</td></tr>';
                     }
                     table_content+= '</tbody>'+
                             '</table>';
-                    document.getElementById("product_orders_table_div").innerHTML = table_content;
+                    document.getElementById("product_stock_in_table_div").innerHTML = table_content;
 
                     $(function () {
-                        $('#payments_table').DataTable({
+                        $('#stock_in_table').DataTable({
                             "paging": true,
                             "lengthChange": false,
                             "searching": true,

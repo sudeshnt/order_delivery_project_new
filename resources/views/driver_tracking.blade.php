@@ -57,6 +57,7 @@
                                         <tr>
                                             <th>Product Code</th>
                                             <th>Product</th>
+                                            <th>Product Size</th>
                                             <th>Qty</th>
                                             <th>Unit Price</th>
                                             <th>Subtotal</th>
@@ -465,7 +466,7 @@
                     var total_units = 0;
                     for(product of data[1]){
                         console.log(product);
-                        table_content+='<tr><td>'+product.product_code+'</td><td>'+product.product_name+'</td><td>'+product.qty+'</td><td>₦ '+product.unit_price+'</td><td>₦ '+(product.qty*product.unit_price).toFixed(2)+'</td></tr>';
+                        table_content+='<tr><td>'+product.product_code+'</td><td>'+product.product_name+'</td><td>'+product.product_size+'</td><td>'+product.qty+'</td><td>₦ '+product.unit_price+'</td><td>₦ '+(product.qty*product.unit_price).toFixed(2)+'</td></tr>';
                         total_units += Number(product.qty);
                     }
                     table_content+='<tr><td></td><td style="text-align: right;">Total Units : </td><td>'+total_units+'</td><td></td><td></td></tr>'

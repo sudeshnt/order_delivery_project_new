@@ -22,9 +22,11 @@
                 <p>{{$order_details->business_name}}</p>
                 {{$order_details->customer_address}}<br>
                 Phone : {{$order_details->customer_mobile}}<br>
-                Email : {{$order_details->email}}<br>
+                Email : {{$order_details->email}}<br><br>
+                <div class="row" id="customer_note" style="text-transform: uppercase; color: #ff4648; margin: 0px;">{{$order_details->note}}</div>
             </address>
         </div>
+
         <!-- /.col -->
         <div class="col-sm-4 invoice-col">
 
@@ -68,6 +70,14 @@
                         <td>{{$product->qty*$product->unit_price}}</td>
                     </tr>
                 @endforeach
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td>Total Units : </td>
+                    <td>{{$totalUnits}}</td>
+                    <td></td>
+                    <td></td>
+                </tr>
                 </tbody>
             </table>
         </div>
@@ -99,7 +109,7 @@
                         <td>$5.80</td>
                     </tr>--}}
                     <tr>
-                        <th>Total:</th>
+                        <th>Total Price:</th>
                         <td>{{$order_details->full_amount}}</td>
                     </tr>
                 </table>

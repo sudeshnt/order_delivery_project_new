@@ -25,6 +25,8 @@ class DriverController extends Controller
         if(Session::get('loggin_status')==true){
             $driver=new Driver;
             $driver->driver_name = Input::get('name');
+            $driver->address = Input::get('address');
+            $driver->mobile = Input::get('mobile');
             $driver->save();
             return Redirect::to('/drivers');
         }else{
@@ -50,15 +52,14 @@ class DriverController extends Controller
     }
 
     public function getDriverById($driver_id){
-        $driver = Driver::select('drivers.driver_id','drivers.driver_name')
-                        ->where('driver_id',$driver_id)->first();
+        $driver = Driver::where('driver_id',$driver_id)->first();
         print_r(json_encode($driver));
     }
 
     public function editDriver(){
         DB::table('drivers')
             ->where('driver_id', Input::get('driver_id'))
-            ->update(['driver_name' => Input::get('driver_name')]);
+            ->update(['driver_name' => Input::get('driver_name'),'address' => Input::get('address'),'mobile' => Input::get('mobile_no')]);
         return Redirect::to('/drivers');
     }
 }

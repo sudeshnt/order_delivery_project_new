@@ -23,6 +23,7 @@ class CustomerController extends Controller
     public function addCustomer(){
 
     	if(Session::get('loggin_status')==true){
+			//dd(Input::all());
     		$customer = new Customer;
     		$customer->customer_name=Input::get('name');
     		$customer->business_name=Input::get('bizz_name');
@@ -30,6 +31,7 @@ class CustomerController extends Controller
     		$customer->email=Input::get('email');
     		$customer->customer_mobile=Input::get('mobile_no');
     		$customer->zone_id=Input::get('zone_id');
+			$customer->note=Input::get('note');
     		$customer->save();
 			return Redirect::to('/customers');
 		}else{
@@ -62,7 +64,7 @@ class CustomerController extends Controller
 	public function editCustomer(){
 		DB::table('customers')
 			->where('customer_id',  Input::get('edit_customer_id'))
-			->update(['customer_name' => Input::get('edit_customer_name'),'business_name' => Input::get('edit_business_name'),'customer_address'=>Input::get('edit_customer_address'),'email' => Input::get('edit_email'),'zone_id' => Input::get('edit_zone_id'),'customer_mobile' => Input::get('edit_customer_mobile')]);
+			->update(['customer_name' => Input::get('edit_customer_name'),'business_name' => Input::get('edit_business_name'),'customer_address'=>Input::get('edit_customer_address'),'email' => Input::get('edit_email'),'zone_id' => Input::get('edit_zone_id'),'customer_mobile' => Input::get('edit_customer_mobile'),'note' => Input::get('edit_note')]);
 		return Redirect::to('/customers');
 	}
 

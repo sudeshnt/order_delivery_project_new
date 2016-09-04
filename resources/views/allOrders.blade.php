@@ -153,6 +153,7 @@
                                                 <option value="delivery" disabled>Add Delivery</option>
                                             @endif
                                         @endif
+                                        <option value="view_deliveries">View Deliveries</option>
                                         @if(Session::get('role')=='Admin' || Session::get('role')== 'Cashier')
                                             @if($order->isPaid==0)
                                                 <option value="payment">Add Payment</option>
@@ -290,7 +291,7 @@
                                     <div class="table-responsive">
                                         <table class="table">
                                             <tr>
-                                                <th>Total:</th>
+                                                <th>Total Price:</th>
                                                 <td><p id="full_amount"></p></td>
                                             </tr>
                                         </table>
@@ -356,6 +357,29 @@
                                 </div>
                             </div>
                             <div class="row">
+                                <div class="col-sm-12">
+                                    <table class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <td>Product Name</td>
+                                                <td>Size</td>
+                                                <td>Ordered qty</td>
+                                                <td>Delivered qty</td>
+                                                <td>Add Delivery</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="product_deliveries">
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="form-group checkbox row" style="padding-bottom: 15px; padding-left: 14px;">
+                                <label>
+                                    <input type="checkbox" name="isFinalize" value="1" > <label style="font-weight: 800; padding-left: 0px">Finalize Delivery</label>
+                                </label>
+                            </div>
+                            <div class="row">
                                 <div class="col-sm-8">
                                     <div class="form-group">
                                         <label for="whoRecieved">Received Person Name</label>
@@ -363,7 +387,6 @@
                                             <input type='text' class="form-control"  name='whoReceived' id='whoReceived' required/>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
                             <div class="row">
@@ -484,13 +507,42 @@
                 </div>
                 <div class="modal-body">
                         <div class="box-body">
-                           {{-- <div class="well" id="order_details">
 
-                            </div>--}}
                             <div class="row" id="payments_table_div">
 
                             </div>
                         </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{--View Deliveries Modal--}}
+    <div class="modal" tabindex="-1" role="dialog" id="viewDeliveriesModal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Deliveries</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="box-body">
+                        <table class="table table-striped">
+                            <thead>
+                            <tr>
+                                <td>Delivery ID</td>
+                                <td>Product</td>
+                                <td>Delivered qty</td>
+                                <td>Received By</td>
+                                <td>Delivered At</td>
+                                <td>Driver Returned At</td>
+                            </tr>
+                            </thead>
+                            <tbody id="deliveries_table_div">
+
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -578,6 +630,48 @@
                         $('#order_code_del').val(data.order_code);
                         $('#customer').val(data.customer_name);
                         $('#delivery_address').val(data.customer_address);
+                        $.ajax({
+                            url: "{{ url('/productsOnOrder') }}"+"/"+order_code,
+                            type: "get",
+                            dataType: 'json',
+                            async:true,
+                            success: function(data){
+                                console.log(data);
+                              //  document.getElementById("product_deliveries").innerHTML = JSON.stringify(data);
+                                var table_content = '';
+                                for(product of data){
+                                    console.log(product);
+                                    var possible_delivery = product.qty - product.qty_delivered;
+                                    table_content+='<tr><td>'+product.product_name+'</td><td>'+product.product_size+'</td><td>'+product.qty+'</td><td>'+product.qty_delivered+'</td><td>'+'<input type="number" name=productsonOrder['+product.id+']" class="form-control" '+'min="'+1+'" max="'+possible_delivery+'"/>'+'</td></tr>';
+                                }
+                                document.getElementById("product_deliveries").innerHTML = table_content;
+                            },
+                            error: function(data)
+                            {
+                                console.log("error");
+                            }
+                        });
+                    }
+                    if(selected=='view_deliveries'){
+                        $.ajax({
+                            url: "{{ url('/getProductDeliveries') }}"+"/"+order_code,
+                            type: "get",
+                            dataType: 'json',
+                            async:true,
+                            success: function(data){
+                                console.log(data);
+                                var table_content = '';
+                                for(delivery of data){
+                                    table_content+='<tr><td>'+delivery.delivery_id+'</td><td>'+delivery.product_name+' : '+delivery.product_size+'</td><td>'+delivery.qty+'</td><td>'+delivery.received_by+'</td><td>'+delivery.delivery_time+'</td><td>'+delivery.returned_time+'</td></tr>';
+                                }
+                                document.getElementById("deliveries_table_div").innerHTML =table_content;
+                                $('#viewDeliveriesModal').modal('show');
+                            },
+                            error: function(data)
+                            {
+                                console.log("error");
+                            }
+                        });
                     }
                     if(selected=='payment'){
                         $('#paymentModal').modal('show');

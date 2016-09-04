@@ -318,13 +318,15 @@
                             <thead>
                             <tr>
                                 <th>Product Name</th>
+                                <th>Product Size</th>
                                 <th>Qty</th>
                             </tr>
                             </thead>
                             <tbody>
                             @foreach ($qty_of_products as $key => $value)
                                 <tr>
-                                    <td>{{$key}}</td>
+                                    <td>{{explode("_", $key)[0]}}</td>
+                                    <td>{{explode("_", $key)[1]}}</td>
                                     <td>{{$value}}</td>
                                 </tr>
                             @endforeach

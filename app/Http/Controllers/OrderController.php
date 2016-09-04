@@ -4,9 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Customer;
 use App\DamagedProduct;
+use App\Delivery;
 use App\Order;
 use App\Payment;
 use App\Product;
+use App\ProductOnDelivery;
 use App\ProductsOnOrders;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -33,6 +35,7 @@ class OrderController extends Controller
 
         //dd($isDelivered);
         $customer = Customer::where('customer_id',$_GET['customer_id'])->first();
+        //dd($_GET['customer_id']);
         // handling products in orders
         foreach ($_GET['products_on_order'] as $product_on_order) {
 
@@ -91,12 +94,18 @@ class OrderController extends Controller
             ->where('orders.order_code',$order_code)
             ->select('orders.*', 'customers.*')
             ->first();
+        //dd($view->order_details);
         //$view->products_on_order = ProductsOnOrders::where('order_code',$order_code)->get();
         $view->products_on_order = DB::table('products_on_order')
             ->join('products', 'products_on_order.product_id', '=', 'products.product_id')
             ->where('products_on_order.order_code',$order_code)
             ->select('products_on_order.*', 'products.*')
             ->get();
+        $view->totalUnits = 0;
+        foreach ($view->products_on_order as $product){
+            $view->totalUnits += $product->qty;
+        }
+        //dd($view->totalUnits);
         //dd($view->order_details,$view->products_on_order);
         return $view;
 
@@ -258,10 +267,37 @@ class OrderController extends Controller
 
     /*submit delivery*/
     public function addDelivery(){
+
+        //dd(Input::all());
         if(Session::get('loggin_status')==true){
-            DB::table('orders')
-                ->where('order_code',  Input::get('order_code_del'))
-                ->update(['delivered_at' => Input::get('delivery_date'),'driver_returned_time' => Input::get('returned_date'),'isDelivered'=>1,'whoReceived' => Input::get('whoReceived')]);
+            //dd(Input::all());
+            //add delivery
+            $delivery = new Delivery();
+            $delivery->order_code = Input::get('order_code_del');
+            $delivery->delivery_time = Input::get('delivery_date');
+            $delivery->returned_time = Input::get('returned_date');
+            $delivery->received_by = Input::get('whoReceived');
+            $delivery->save();
+            //dd($delivery);
+            foreach (Input::get('productsonOrder') as  $id => $qty){
+
+                DB::table('products_on_order')
+                    ->where('id',$id)
+                    ->increment('qty_delivered',$qty);
+
+                $product_delivery = new ProductOnDelivery();
+                $product_delivery->delivery_id = $delivery->id;
+                $product_delivery->product_id = $id;
+                $product_delivery->qty = $qty;
+                $product_delivery->save();
+            }
+
+            //finalize delivery
+            if(Input::get('isFinalize')=='1'){
+                DB::table('orders')
+                    ->where('order_code',  Input::get('order_code_del'))
+                    ->update(['delivered_at' => Input::get('delivery_date'),'driver_returned_time' => Input::get('returned_date'),'isDelivered'=>1,'whoReceived' => Input::get('whoReceived')]);
+            }
             return Redirect::to('/allOrders/all/tab1');
         }else{
             return Redirect::to('/login');
@@ -316,6 +352,22 @@ class OrderController extends Controller
         if(Session::get('loggin_status')==true){
             $payments = Payment::where('order_code',$order_code)-> orderBy('payment_date', 'asc')->get();
             print_r(json_encode($payments));
+        }else{
+            return Redirect::to('/login');
+        }
+    }
+
+    /*get product deliveries of an order*/
+    public function getProductDeliveries($order_code){
+        if(Session::get('loggin_status')==true){
+            $deliveries = Delivery::join('products_on_delivery','deliveries.delivery_id', '=', 'products_on_delivery.delivery_id')
+                         ->join('products_on_order','products_on_delivery.product_id', '=', 'products_on_order.id')
+                         ->join('products','products_on_order.product_id', '=', 'products.product_id')
+                         ->select('deliveries.delivery_id','products.product_name','products.product_size','products_on_delivery.qty','deliveries.received_by','deliveries.delivery_time','deliveries.returned_time')
+                         ->where('deliveries.order_code',$order_code)
+                         ->orderBy('deliveries.created_at', 'desc')
+                         ->get();
+            print_r(json_encode($deliveries));
         }else{
             return Redirect::to('/login');
         }
@@ -379,6 +431,15 @@ class OrderController extends Controller
         //dd($view->allOrders);
         return $view;
     }
+
+    /*get products on order*/
+    public function productsOnOrder($order_code){
+        $products_on_order=ProductsOnOrders::join('products','products_on_order.product_id', '=', 'products.product_id')
+                            ->where('products_on_order.order_code',$order_code)
+                            ->get();
+        print_r(json_encode($products_on_order));
+    }
+
     // driver tracking
     public function driver_tracking($start_date,$end_date){
 
@@ -538,13 +599,13 @@ class OrderController extends Controller
         date_default_timezone_set('Africa/Lagos');
         if($option == 'daily'){
             $startdate = date("Y-m-d");
-            $enddate = date("Y-m-d H:i:s");
+            $enddate = date("Y-m-d");
             $view->option = "Today's";
         }else if($option == 'monthly' || $option=='custom'){
             $startdate = date("Y-m-01");
-            $enddate = date("Y-m-d H:i:s");
+            $enddate = date("Y-m-d");
+            //dd($startdate,$enddate);
             $view->option = 'Monthly';
-
         }else{
             $dates = explode(",", $option);
             $startdate=$dates[0];
@@ -552,7 +613,7 @@ class OrderController extends Controller
             $view->option = 'Within Range';
             $view->filteredDate = date('m/d/Y', strtotime(str_replace('-', '/', $startdate)))." - ".date('m/d/Y', strtotime(str_replace('-', '/', $enddate)));
         }
-        dd($startdate,$enddate);
+        //dd($startdate,$enddate);
         //get all orders made within range
         $view->allOrders = DB::table('orders')
                     ->join('customers', 'orders.customer_id', '=', 'customers.customer_id')
@@ -565,7 +626,7 @@ class OrderController extends Controller
                     ->where('orders.order_date','<=',$enddate." 23:59:59")
                     ->get();
         // get all deliveries daily or monthly
-        $view->allDeliveries = DB::table('orders')
+        /*$view->allDeliveries = DB::table('orders')
                     ->join('customers', 'orders.customer_id', '=', 'customers.customer_id')
                     ->join('vehicles', 'orders.vehicle_id', '=', 'vehicles.vehicle_id')
                     ->join('drivers', 'vehicles.driver_id', '=', 'drivers.driver_id')
@@ -575,7 +636,21 @@ class OrderController extends Controller
                     ->where('orders.isDelivered',1)
                     ->where('orders.delivered_at','>=',$startdate)
                     ->where('orders.delivered_at','<=',$enddate." 23:59:59")
-                    ->get();
+                    ->get();*/
+        $view->allDeliveries = DB::table('deliveries')
+            ->join('products_on_delivery', 'deliveries.delivery_id', '=', 'products_on_delivery.delivery_id')
+            ->join('orders', 'orders.order_code', '=', 'deliveries.order_code')
+            ->join('customers', 'orders.customer_id', '=', 'customers.customer_id')
+            ->join('vehicles', 'orders.vehicle_id', '=', 'vehicles.vehicle_id')
+            ->join('drivers', 'vehicles.driver_id', '=', 'drivers.driver_id')
+            //->join('products_on_order', 'orders.order_code', '=', 'products_on_order.order_code')
+            ->select('orders.order_date','deliveries.delivery_time','deliveries.order_code','deliveries.received_by','customers.customer_name','vehicles.vehicle_number','drivers.*',DB::raw('count(products_on_delivery.qty) as num_product,SUM(products_on_delivery.qty) as total_qty'))
+            ->groupBy('products_on_delivery.delivery_id')
+           // ->where('orders.isDelivered',1)
+            ->where('deliveries.delivery_time','>=',$startdate)
+            ->where('deliveries.delivery_time','<=',$enddate." 23:59:59")
+            ->get();
+        //dd($view->allDeliveries);
         // sales wise , products wise , income wise reports
 
         $order_code_list = array();
@@ -588,15 +663,15 @@ class OrderController extends Controller
         }
         $view->total_due_payments = $view->total_sales-$view->total_settled;
 
-        $order_products=ProductsOnOrders::join('products','products_on_order.product_id', '=', 'products.product_id')->select('products.product_name','products_on_order.qty')->whereIn('order_code',$order_code_list)->get();
+        $order_products=ProductsOnOrders::join('products','products_on_order.product_id', '=', 'products.product_id')->select('products.product_name','products.product_size','products_on_order.qty')->whereIn('order_code',$order_code_list)->get();
         $view->qty_of_products = array();
         $view->total_units_sold=0;
         foreach($order_products as $products_on_order) {
-            if(array_key_exists($products_on_order->product_name, $view->qty_of_products)){
-                $view->qty_of_products["$products_on_order->product_name"]+=$products_on_order->qty;
+            if(array_key_exists("$products_on_order->product_name"."__"."$products_on_order->product_size", $view->qty_of_products)){
+                $view->qty_of_products["$products_on_order->product_name"."__"."$products_on_order->product_size"]+=$products_on_order->qty;
                 $view->total_units_sold+=$products_on_order->qty;
             }else{
-                $view->qty_of_products["$products_on_order->product_name"]=$products_on_order->qty;
+                $view->qty_of_products["$products_on_order->product_name"."__"."$products_on_order->product_size"]=$products_on_order->qty;
                 $view->total_units_sold+=$products_on_order->qty;
             }
         }
@@ -607,7 +682,12 @@ class OrderController extends Controller
         }
 
         // getting payment reports
-        $view->payment_reports = Payment::where('payment_date','>=',$startdate)->where('payment_date','<=',$enddate." 23:59:59")->get();
+        $view->payment_reports = Payment::join('orders','orders.order_code', '=', 'payments.order_code')
+                                 ->join('customers','orders.customer_id', '=', 'customers.customer_id')
+                                 ->select('customers.customer_name','payments.*')
+                                 ->where('payment_date','>=',$startdate)
+                                 ->where('payment_date','<=',$enddate." 23:59:59")->get();
+        //dd($view->payment_reports);
         $view->total_income = 0;
         foreach($view->payment_reports as $payment) {
             $view->total_income+=$payment->amount;

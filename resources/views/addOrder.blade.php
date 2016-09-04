@@ -59,10 +59,11 @@
                     <select class="form-control select2" name="customer_id" id='customer_id' style="width: 100%;" onchange="customerSelected(this.value);">
                         <option selected>Choose a Customer</option>
                         @foreach ($allCustomers as $customer)
-                            <option value="{{$customer->customer_id}}">{{$customer->customer_name}}</option>
+                            <option value="{{json_encode($customer)}}">{{$customer->customer_name}}</option>
                         @endforeach
                     </select>
                 </div>
+                <div class="row" id="customer_note" style="text-transform: uppercase; color: #ff4648;"></div>
                 <div class="form-group row">
                     <label >Add Products</label>
                       <span>
@@ -321,7 +322,7 @@
                     data:{products_on_order:products_on_order,
                         order_date:document.getElementById("order_date").value,
                         order_code:document.getElementById("order_id").value,
-                        customer_id:document.getElementById("customer_id").value,
+                        customer_id:JSON.parse(document.getElementById("customer_id").value).customer_id,
                         vehicle_id:vehicle_id,
                         full_amount:total_amount,
                         isDelivered:isDelivered},
@@ -341,9 +342,11 @@
 
     //when customer is changed available vehicles for that customer zone
     //will be selected and loaded to the vehicle select drop down
-    function customerSelected(customer_id){
+    function customerSelected(customer){
+        var customer_obj = JSON.parse(customer);
+        document.getElementById("customer_note").innerHTML = customer_obj.note;
         $.ajax({
-            url: "{{ url('/getCustomerZoneVehicles') }}"+"/"+customer_id,
+            url: "{{ url('/getCustomerZoneVehicles') }}"+"/"+customer_obj.customer_id,
             type: "get",
             dataType: 'json',
             async:true,

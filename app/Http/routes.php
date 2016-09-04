@@ -170,6 +170,12 @@ Route::get('/getDamagedProductById/{product_id}','ProductController@getDamagedPr
 /*test customer zone*/
 Route::get('/customerZones1','ViewController@customerZones1');
 
+/*get products on order*/
+Route::get('/productsOnOrder/{order_code}','OrderController@productsOnOrder');
+
+/*get product deliveries*/
+Route::get('/getProductDeliveries/{order_code}','OrderController@getProductDeliveries');
+
 Route::get('/{any}', function () {
 	 return Redirect::to('/login');
 });

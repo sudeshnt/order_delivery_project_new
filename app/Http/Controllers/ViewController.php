@@ -105,17 +105,18 @@ class ViewController extends Controller
 				array_push($order_code_list,$order_code->order_code);
 			}
 			$order_products=ProductsOnOrders::join('products','products_on_order.product_id', '=', 'products.product_id')
-											->select('products.product_name','products_on_order.qty')
+											->select('products.product_name','products.product_size','products_on_order.qty')
 											->whereIn('order_code',$order_code_list)
 											->get();
 			$view->qty_of_products = array();
 			$view->total_units_sold=0;
+			//dd($order_products);
 			foreach($order_products as $products_on_order) {
 				if(array_key_exists($products_on_order->product_name, $view->qty_of_products)){
-					$view->qty_of_products["$products_on_order->product_name"]+=$products_on_order->qty;
+					$view->qty_of_products["$products_on_order->product_name"."_"."$products_on_order->product_size"]+=$products_on_order->qty;
 					$view->total_units_sold+=$products_on_order->qty;
 				}else{
-					$view->qty_of_products["$products_on_order->product_name"]=$products_on_order->qty;
+					$view->qty_of_products["$products_on_order->product_name"."_"."$products_on_order->product_size"]=$products_on_order->qty;
 					$view->total_units_sold+=$products_on_order->qty;
 				}
 			}

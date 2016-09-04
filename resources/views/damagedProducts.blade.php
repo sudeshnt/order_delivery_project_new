@@ -83,7 +83,7 @@
                                     <select class="form-control select2 product_details" name="product_id" id="product_id" style="width: 100%;" required>
                                         <option>Select Damaged Product</option>
                                         @foreach ($allProducts as $product)
-                                            <option value="{{$product->product_id}}">{{$product->product_name}}</option>
+                                            <option value="{{$product->product_id}}">{{$product->product_name}} ({{$product->product_size}})</option>
                                         @endforeach
                                     </select>
                                 </div>

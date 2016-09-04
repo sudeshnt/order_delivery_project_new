@@ -109,7 +109,11 @@
 		                  <label for="mobile_no">Mobile Number</label>
 		                  <input type="tel" class="form-control" name="mobile_no" id="mobile_no" placeholder="Enter Mobile Number" required>
 		                </div>
-		              
+					    <div class="form-group">
+						  <label for="note">Note</label>
+						  <textarea rows="4" type="text" class="form-control" name="note" id="note" placeholder="Enter Customer Note"></textarea>
+						</div>
+
  		          </div>
 		              <!-- /.box-body -->
 
@@ -198,6 +202,10 @@
 							<div class="form-group">
 								<label for="mobile_no">Mobile Number</label>
 								<input type="tel" class="form-control" name="edit_customer_mobile" id="edit_customer_mobile" placeholder="Enter Mobile Number" required>
+							</div>
+							<div class="form-group">
+								<label for="edit_note">Note</label>
+								<textarea rows="4" type="text" class="form-control" name="edit_note" id="edit_note" placeholder="Enter Customer Note"></textarea>
 							</div>
 						</div>
 						<div class="box-footer">

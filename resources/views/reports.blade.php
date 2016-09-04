@@ -164,13 +164,15 @@
                     <thead>
                     <tr>
                         <th>Product Name</th>
+                        <th>Product Size</th>
                         <th>Qty</th>
                     </tr>
                     </thead>
                     <tbody>
                     @foreach ($qty_of_products as $key => $value)
                         <tr>
-                            <td>{{$key}}</td>
+                            <td>{{explode("__", $key)[0]}}</td>
+                            <td>{{explode("__", $key)[1]}}</td>
                             <td>{{$value}}</td>
                         </tr>
                     @endforeach
@@ -189,6 +191,8 @@
                     <thead>
                     <tr>
                         <th>Payment Reference</th>
+                        <th>Customer Name</th>
+                        <th>Order Id</th>
                         <th>Payment Date</th>
                         <th>Amount</th>
                     </tr>
@@ -197,6 +201,8 @@
                     @foreach ($payment_reports as $payment)
                         <tr>
                             <td>{{$payment->payment_id}}</td>
+                            <td>{{$payment->customer_name}}</td>
+                            <td>{{$payment->order_code}}</td>
                             <td>{{$payment->payment_date}}</td>
                             <td>₦ {{$payment->amount}}</td>
                         </tr>
@@ -230,7 +236,7 @@
                     <tbody>
                     @foreach ($allDeliveries as $delivery)
                         <tr>
-                            <td>{{$delivery->delivered_at}}</td>
+                            <td>{{$delivery->delivery_time}}</td>
                             <td>{{$delivery->order_date}}</td>
                             <td>{{$delivery->order_code}}</td>
                             <td>{{$delivery->customer_name}}</td>
@@ -241,7 +247,7 @@
                                 <td>{{$delivery->vehicle_number}} : {{$delivery->driver_name}}</td>
                             @endif
 
-                            <td>{{$delivery->whoReceived}}</td>
+                            <td>{{$delivery->received_by}}</td>
                         </tr>
                     @endforeach
                     </tbody>
@@ -292,7 +298,8 @@
                 "searching": true,
                 "ordering": true,
                 "info": true,
-                "autoWidth": false
+                "autoWidth": false,
+                "order": [[ 0, "desc" ]]
             });
         });
 

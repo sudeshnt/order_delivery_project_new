@@ -1,6 +1,12 @@
 @extends('master')
 
 @section('content')
+
+    <style type="text/css">
+        .row {
+            margin: 0%;
+        }
+    </style>
     <section class="content-header">
         <h1>
             Drivers
@@ -20,6 +26,8 @@
                         <thead>
                         <tr>
                             <th>Driver Number</th>
+                            <th>Address</th>
+                            <th>Mobile No</th>
                             @if(Session::get('role_id')==1)
                                 <th></th>
                                 <th></th>
@@ -30,6 +38,8 @@
                         @foreach ($allDrivers as $driver)
                             <tr>
                                 <td>{{$driver->driver_name}}</td>
+                                <td>{{$driver->address}}</td>
+                                <td>{{$driver->mobile}}</td>
                                 @if(Session::get('role_id')==1)
                                     <td style="text-align: center;" onclick="editDriver('{{$driver->driver_id}}');"><i class="fa fa-pencil-square-o fa-2x" aria-hidden="true"></i></td>
                                     <td style="text-align: center;" onclick="deleteDriver('{{$driver->driver_id}}');"><i class="fa fa-trash-o fa-2x" aria-hidden="true"></i></td>
@@ -47,6 +57,14 @@
                             <div class="form-group">
                                 <label for="name">Driver's Name</label>
                                 <input type="text" class="form-control" name="name" id="name" placeholder="Enter Driver's Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="address">Address</label>
+                                <input type="text" class="form-control" name="address" id="address" placeholder="Enter Address" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="mobile_no">Mobile Number</label>
+                                <input type="tel" class="form-control" name="mobile_no" id="mobile" placeholder="Enter Mobile Number" required>
                             </div>
                         </div>
                         <!-- /.box-body -->
@@ -77,6 +95,14 @@
                             <div class="form-group">
                                 <label for="name">Driver's Name</label>
                                 <input type="text" class="form-control" name="driver_name" id="edit_driver_name" placeholder="Enter Driver's Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="address">Address</label>
+                                <input type="text" class="form-control" name="address" id="edit_address" placeholder="Enter Address" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="mobile_no">Mobile Number</label>
+                                <input type="tel" class="form-control" name="mobile_no" id="edit_mobile" placeholder="Enter Mobile Number" required>
                             </div>
                         </div>
                         <div class="box-footer">
