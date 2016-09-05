@@ -83,7 +83,7 @@
 
                 <div class="info-box-content">
                     <span class="info-box-text">All Units Delivered</span>
-                    <span class="info-box-number">{{$total_units_delivered}}</span>
+                    <span class="info-box-number"><small>By Vehicle : </small>{{$total_units_delivered_by_vehicle}}<br><small>By Hand : </small> {{$total_units_delivered_by_hand}}</span>
                 </div>
                 <!-- /.info-box-content -->
             </div>

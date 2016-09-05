@@ -26,21 +26,18 @@ class OrderController extends Controller
 {
     //place order
     public function placeOrder(){
+
         $products_on_order = array();
+
         $order_date = $_GET['order_date'];
         $order_code = $_GET['order_code'];
         $full_amount = $_GET['full_amount'];
         $vehicle_id = $_GET['vehicle_id'];
         $isDelivered = $_GET['isDelivered'];
-
-        //dd($isDelivered);
         $customer = Customer::where('customer_id',$_GET['customer_id'])->first();
-        //dd($_GET['customer_id']);
-        // handling products in orders
-        foreach ($_GET['products_on_order'] as $product_on_order) {
 
+        foreach($_GET['products_on_order'] as $product_on_order){
             $product = Product::where('product_id',$product_on_order["product_id"])->first();
-
             //adding to products on order table
             $product_on_order_entry = new ProductsOnOrders();
             $product_on_order_entry->order_code = $order_code;
@@ -49,7 +46,6 @@ class OrderController extends Controller
             //available amount after the order
             $product_on_order_entry->available_amount = $product->available_amount-$product_on_order["qty"];
             $product_on_order_entry->save();
-
             //updating available amounts
             DB::table('products')
                 ->where('product_id',  $product->product_id)
@@ -68,22 +64,32 @@ class OrderController extends Controller
             $order->deliveryType = 'byHand';
             $order->delivered_at = $order_date;
             $order->whoReceived = $customer->customer_name;
+
+            //inserting hand deliveries into deliveries table
+            $delivery = new Delivery();
+            $delivery->order_code = $order_code;
+            $delivery->delivery_time = $order_date;
+            $delivery->received_by = $customer->customer_name;
+            $delivery->type = "hand";
+            $delivery->save();
+            //adding to products on delivery table
+            foreach($_GET['products_on_order'] as $product_on_order){
+                $product_on_delivery = new ProductOnDelivery();
+                $product_on_delivery->delivery_id = $delivery->id;
+                $product_on_delivery->product_id = $product_on_order["product_id"];
+                $product_on_delivery->qty = $product_on_order["qty"];
+                $product_on_delivery->save();
+            }
         }else{
             $order->deliveryType = 'byVehicle';
         }
         $order->save();
-
         //assign vehicle
         DB::table('vehicles')
             ->where('vehicle_id',$vehicle_id)
             ->update(['isAssigned' => 1,'assigned_date' =>  date('Y-m-d H:i:s')]);
 
-        /*return Redirect::to('/login');*/
-        /*$view = View::make('invoice');
-        return $view;*/
-       // print_r(json_encode([$order_date,$order_code,$customer,$products_on_order,$paid_amount,$isPaid,$_GET['products_on_order']]));
         print_r(json_encode($order_code));
-
     }
 
     /*generate invoice*/
@@ -644,7 +650,7 @@ class OrderController extends Controller
             ->join('vehicles', 'orders.vehicle_id', '=', 'vehicles.vehicle_id')
             ->join('drivers', 'vehicles.driver_id', '=', 'drivers.driver_id')
             //->join('products_on_order', 'orders.order_code', '=', 'products_on_order.order_code')
-            ->select('orders.order_date','deliveries.delivery_time','deliveries.order_code','deliveries.received_by','customers.customer_name','vehicles.vehicle_number','drivers.*',DB::raw('count(products_on_delivery.qty) as num_product,SUM(products_on_delivery.qty) as total_qty'))
+            ->select('orders.order_date','deliveries.delivery_time','deliveries.type','deliveries.order_code','deliveries.received_by','customers.customer_name','vehicles.vehicle_number','drivers.*',DB::raw('count(products_on_delivery.qty) as num_product,SUM(products_on_delivery.qty) as total_qty'))
             ->groupBy('products_on_delivery.delivery_id')
            // ->where('orders.isDelivered',1)
             ->where('deliveries.delivery_time','>=',$startdate)
@@ -676,9 +682,15 @@ class OrderController extends Controller
             }
         }
         // getting all units delivered
-        $view->total_units_delivered=0;
+        $view->total_units_delivered_by_vehicle=0;
+        $view->total_units_delivered_by_hand=0;
         foreach($view->allDeliveries as $delivery){
-            $view->total_units_delivered+=$delivery->total_qty;
+            if($delivery->type=='vehicle'){
+                $view->total_units_delivered_by_vehicle+=$delivery->total_qty;
+            }else if($delivery->type=='hand'){
+                $view->total_units_delivered_by_hand+=$delivery->total_qty;
+            }
+
         }
 
         // getting payment reports
