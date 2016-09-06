@@ -642,7 +642,10 @@
                                 for(product of data){
                                     console.log(product);
                                     var possible_delivery = product.qty - product.qty_delivered;
-                                    table_content+='<tr><td>'+product.product_name+'</td><td>'+product.product_size+'</td><td>'+product.qty+'</td><td>'+product.qty_delivered+'</td><td>'+'<input type="number" name=productsonOrder['+product.id+']" class="form-control" '+'min="'+1+'" max="'+possible_delivery+'"/>'+'</td></tr>';
+                                    if(possible_delivery>0)
+                                        table_content+='<tr><td>'+product.product_name+'</td><td>'+product.product_size+'</td><td>'+product.qty+'</td><td>'+product.qty_delivered+'</td><td>'+'<input type="number" name=productsonOrder['+product.id+']" class="form-control" '+'min="'+0+'" max="'+possible_delivery+'" value="0" required/>'+'</td></tr>';
+                                    else
+                                        table_content+='<tr><td>'+product.product_name+'</td><td>'+product.product_size+'</td><td>'+product.qty+'</td><td>'+product.qty_delivered+'</td><td>'+'<input type="number" name=productsonOrder['+product.id+']" class="form-control" value="0" min="0" max="0"/>'+'</td></tr>';
                                 }
                                 document.getElementById("product_deliveries").innerHTML = table_content;
                             },

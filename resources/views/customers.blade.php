@@ -269,9 +269,9 @@
 					else {
 							HTML+='Assigned Vehicle : '+data[order].vehicle_number+' , '+data[order].driver_name+'<br>';
 					}
-					HTML+='Order Value : ₦ '+data[order].full_amount+'<br>'+'Paid Amount : ₦ '+(data[order].paid_amount).toFixed(2)+'<br>';
+					HTML+='Order Value : ₦ '+data[order].full_amount+'<br>'+'Paid Amount : ₦ '+Number(data[order].paid_amount).toFixed(2)+'<br>';
 					if(data[order].isPaid==0)
-						HTML+='<p style="color: #FD3131;">Due Payment : ₦ '+(data[order].full_amount-data[order].paid_amount).toFixed(2)+'</p>';
+						HTML+='<p style="color: #FD3131;">Due Payment : ₦ '+Number(data[order].full_amount-data[order].paid_amount).toFixed(2)+'</p>';
 					HTML+='</div>'+
 						'</div>'+
 					'</div>';
